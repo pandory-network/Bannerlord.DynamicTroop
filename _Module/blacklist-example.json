@@ -1,0 +1,25 @@
+﻿{
+  "string_id_regex": [
+    ".*dress.*",
+    ".*crown.*",
+    ".*ballista.*",
+    ".*grapeshot.*",
+    "dp_.*"
+  ],
+  "string_id": [
+    "pot",
+    "boulder"
+  ],
+  "name_regex": [
+    ".*[D|d]ress.*",
+    ".*[C|c]rown.*",
+    ".*[B|b]allista.*",
+    ".*裙.*",
+    ".*王冠.*",
+    ".*女.+"
+  ],
+  "name": [
+    "黄金桂冠",
+    "火罐"
+  ]
+}

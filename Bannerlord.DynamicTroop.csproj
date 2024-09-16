@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Version>0.0.1</Version>
-    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net472;net6</TargetFrameworks>
     <Platforms>x64</Platforms>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -17,12 +17,15 @@
     <!-- Module manually override GameVersion -->
     <!-- <OverrideGameVersion>v1.0.0</OverrideGameVersion> -->
   </PropertyGroup>
+  <Target Name="CopyFilesToModuleFolder" BeforeTargets="Build">
+    <Copy SourceFiles="README.md;LICENSE.txt" DestinationFolder="$([System.IO.Path]::Combine($(MSBuildProjectDirectory), '_Module'))" SkipUnchangedFiles="true" />
+  </Target>
 
   <PropertyGroup Condition="$(TargetFramework) == 'net472'">
     <!-- Steam/GOG/Epic versions of the game -->
     <BuildForWindows>true</BuildForWindows>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework) == 'netcoreapp3.1'">
+  <PropertyGroup Condition="$(TargetFramework) == 'net6'">
     <!-- Xbox Game Pass PC version of the game -->
     <BuildForWindowsStore>false</BuildForWindowsStore>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -44,6 +47,7 @@
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" IncludeAssets="compile" />
     <PackageReference Include="BUTR.Harmony.Analyzer" Version="1.0.1.50" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
 	<Content Include="log4net.config">
@@ -212,5 +216,17 @@
       <HintPath>C:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.TwoDimension.Standalone.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Bannerlord.DynamicTroop.Test\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Remove="Bannerlord.DynamicTroop.Test\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Bannerlord.DynamicTroop.Test\**" />
+    </ItemGroup>
   
 </Project>

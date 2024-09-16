@@ -1,60 +1,53 @@
-﻿#region
+﻿using System;
+using System.Collections.Generic;
+using TaleWorlds.Core;
+using TaleWorlds.LinQuick;
+using TaleWorlds.MountAndBlade;
 
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-	using TaleWorlds.Core;
-	using TaleWorlds.MountAndBlade;
+namespace Bannerlord.DynamicTroop;
 
-#endregion
+public static class ArmorSelector {
+	private static readonly Random Random = new();
 
-	namespace Bannerlord.DynamicTroop;
+    /// <summary>
+    ///     根据身体部位从装甲列表中随机选择一件装甲。
+    /// </summary>
+    /// <param name="armors">   装甲列表。 </param>
+    /// <param name="bodyPart"> 要保护的身体部位。 </param>
+    /// <returns> 选中的装甲物品，如果没有合适的装甲则返回null。 </returns>
+    public static ItemObject? GetRandomArmorByBodyPart(List<ItemObject> armors, BoneBodyPartType? bodyPart) {
+		if (!bodyPart.HasValue) return null;
 
-	public class ArmorSelector {
-		private static readonly Random Random = new();
+		var weightedArmors = armors.WhereQ(armor => armor.HasArmorComponent)
+								   .SelectQ(armor => new { Armor = armor, armor.ArmorComponent })
+								   .WhereQ(ac => ac.ArmorComponent != null)
+								   .SelectQ(ac => new {
+														  ac.Armor,
+														  Weight =
+															  Helper.GetArmorValueForBodyPart(ac.ArmorComponent,
+																  bodyPart.Value)
+													  })
+								   .WhereQ(aw => aw.Weight > 0)
+								   .ToArrayQ();
 
-		public static ItemObject? GetRandomArmorByBodyPart(List<ItemObject> armors, BoneBodyPartType? bodyPart) {
-			if (!bodyPart.HasValue) return null;
-
-			List<(ItemObject Armor, int Weight)> weightedArmors = new();
-
-			foreach (var armor in armors)
-				if (armor.HasArmorComponent) {
-					var armorComponent = armor.ArmorComponent;
-					if (armorComponent != null) {
-						var armorValue = GetArmorValueForBodyPart(armorComponent, bodyPart.Value);
-						if (armorValue > 0) weightedArmors.Add((Armor: armor, Weight: armorValue));
-					}
-				}
-
-			return SelectArmorBasedOnWeight(weightedArmors);
-		}
-
-		private static int GetArmorValueForBodyPart(ArmorComponent armorComponent, BoneBodyPartType bodyPart) {
-			return bodyPart switch {
-					   BoneBodyPartType.Head          => armorComponent.HeadArmor,
-					   BoneBodyPartType.Neck          => armorComponent.HeadArmor,
-					   BoneBodyPartType.Chest         => armorComponent.BodyArmor,
-					   BoneBodyPartType.Abdomen       => armorComponent.BodyArmor,
-					   BoneBodyPartType.ShoulderLeft  => armorComponent.BodyArmor,
-					   BoneBodyPartType.ShoulderRight => armorComponent.BodyArmor,
-					   BoneBodyPartType.ArmLeft       => armorComponent.ArmArmor,
-					   BoneBodyPartType.ArmRight      => armorComponent.ArmArmor,
-					   BoneBodyPartType.Legs          => armorComponent.LegArmor,
-					   _                              => 0
-				   };
-		}
-
-		private static ItemObject? SelectArmorBasedOnWeight(List<(ItemObject Armor, int Weight)> weightedArmors) {
-			var totalWeight = weightedArmors.Sum(a => a.Weight);
-			var choice      = Random.Next(totalWeight);
-			var sum         = 0;
-
-			foreach ((var armor, var weight) in weightedArmors) {
-				sum += weight;
-				if (choice < sum) return armor;
-			}
-
-			return null;
-		}
+		return SelectArmorBasedOnWeight(weightedArmors.SelectQ(aw => (aw.Armor, aw.Weight)).ToArrayQ());
 	}
+
+    /// <summary>
+    ///     基于权重从装甲列表中选择一件装甲。
+    /// </summary>
+    /// <param name="weightedArmors"> 包含装甲及其权重的数组。 </param>
+    /// <returns> 根据权重选中的装甲物品，如果没有选中任何装甲则返回null。 </returns>
+    private static ItemObject? SelectArmorBasedOnWeight((ItemObject Armor, int Weight)[] weightedArmors) {
+		var totalWeight = weightedArmors.SumQ(a => a.Weight);
+		var choice      = Random.Next(totalWeight);
+		var sum         = 0;
+
+		foreach ((var armor, var weight) in weightedArmors) {
+			sum += weight;
+			if (choice < sum) return armor;
+		}
+
+		return null;
+	}
+}
